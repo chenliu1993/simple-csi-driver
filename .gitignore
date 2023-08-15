@@ -16,6 +16,10 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
-
+hack/bin
+simple-csi-driver
+coverage.txt
+.vscode
+nfsshare
 # Go workspace file
 go.work

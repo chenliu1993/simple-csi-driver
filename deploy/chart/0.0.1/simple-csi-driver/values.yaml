@@ -1,0 +1,132 @@
+﻿customLabels: {}
+namenameOverride: ""
+image:
+    simple:
+        repository: cl20192019/simple-csi-driver
+        tag: fb06ed90e5d6acbb5ace10f669cfddb1a7b1f507
+        pullPolicy: IfNotPresent
+    csiProvisioner:
+        repository: registry.k8s.io/sig-storage/csi-provisioner
+        tag: v3.5.0
+        pullPolicy: IfNotPresent
+    livenessProbe:
+        repository: registry.k8s.io/sig-storage/livenessprobe
+        tag: v2.10.0
+        pullPolicy: IfNotPresent
+    nodeDriverRegistrar:
+        repository: registry.k8s.io/sig-storage/csi-node-driver-registrar
+        tag: v2.8.0
+        pullPolicy: IfNotPresent
+
+serviceAccount:
+  create: true # When true, service accounts will be created for you. Set to false if you want to use your own.
+  controller: csi-simple-controller-sa # Name of Service Account to be created or used
+
+rbac:
+  create: true
+  name: simple
+
+driver:
+  name: simple.csi.k8s.io
+  mountPermissions: 0
+
+feature:
+  enableFSGroupPolicy: true
+  enableInlineVolume: false
+
+kubeletDir: /var/lib/kubelet
+
+controller:
+  name: csi-simple-controller
+  replicas: 1
+  strategyType: Recreate
+  runOnMaster: false
+  runOnControlPlane: false
+  livenessProbe:
+    healthPort: 29652
+  logLevel: 5
+  workingMountDir: /tmp
+  dnsPolicy: ClusterFirstWithHostNet  # available values: Default, ClusterFirstWithHostNet, ClusterFirst
+  defaultOnDeletePolicy: delete  # available values: delete, retain
+  affinity: {}
+  nodeSelector: {}
+  priorityClassName: system-cluster-critical
+  tolerations:
+    - key: "node-role.kubernetes.io/master"
+      operator: "Exists"
+      effect: "NoSchedule"
+    - key: "node-role.kubernetes.io/controlplane"
+      operator: "Exists"
+      effect: "NoSchedule"
+    - key: "node-role.kubernetes.io/control-plane"
+      operator: "Exists"
+      effect: "NoSchedule"
+  resources:
+    csiProvisioner:
+      limits:
+        memory: 400Mi
+      requests:
+        cpu: 10m
+        memory: 20Mi
+    livenessProbe:
+      limits:
+        memory: 100Mi
+      requests:
+        cpu: 10m
+        memory: 20Mi
+    simple:
+      limits:
+        memory: 200Mi
+      requests:
+        cpu: 10m
+        memory: 20Mi
+
+node:
+  name: csi-simple-node
+  dnsPolicy: ClusterFirstWithHostNet  # available values: Default, ClusterFirstWithHostNet, ClusterFirst
+  maxUnavailable: 1
+  logLevel: 5
+  livenessProbe:
+    healthPort: 29653
+  affinity: {}
+  nodeSelector: {}
+  priorityClassName: system-cluster-critical
+  tolerations:
+    - operator: "Exists"
+  resources:
+    livenessProbe:
+      limits:
+        memory: 100Mi
+      requests:
+        cpu: 10m
+        memory: 20Mi
+    nodeDriverRegistrar:
+      limits:
+        memory: 100Mi
+      requests:
+        cpu: 10m
+        memory: 20Mi
+    simple:
+      limits:
+        memory: 300Mi
+      requests:
+        cpu: 10m
+        memory: 20Mi
+
+externalSnapshotter:
+  enabled: true
+  name: snapshot-controller
+  priorityClassName: system-cluster-critical
+  controller:
+    replicas: 1
+  resources:
+    limits:
+      memory: 300Mi
+    requests:
+      cpu: 10m
+      memory: 20Mi
+## Reference to one or more secrets to be used when pulling images
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+##
+imagePullSecrets: []
+# - name: "image-pull-secret"
